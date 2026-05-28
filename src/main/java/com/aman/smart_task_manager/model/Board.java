@@ -27,6 +27,7 @@ public class Board {
     @JoinTable(name = "board_members",
             joinColumns = @JoinColumn(name = "board_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @Builder.Default
     private Set<User> members = new HashSet<>();
 
     @Column(updatable = false)

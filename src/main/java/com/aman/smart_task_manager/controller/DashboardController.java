@@ -31,17 +31,16 @@ public class DashboardController {
         boardRepository.findBoardByIdAndUserAccess(boardId, currentUser.getId(), currentUser)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board not found"));
 
+        LocalDateTime now = LocalDateTime.now();
         return DashboardStatsDto.builder()
                 .totalTasks(taskRepository.countByBoardId(boardId))
                 .todoCount(taskRepository.countByBoardIdAndStatus(boardId, TaskStatus.TODO))
                 .inProgressCount(taskRepository.countByBoardIdAndStatus(boardId, TaskStatus.IN_PROGRESS))
                 .inReviewCount(taskRepository.countByBoardIdAndStatus(boardId, TaskStatus.IN_REVIEW))
                 .doneCount(taskRepository.countByBoardIdAndStatus(boardId, TaskStatus.DONE))
-                .overdueCount((long) taskRepository.findOverdueTasksByBoardId(boardId, LocalDateTime.now()).size())
+                .overdueCount(taskRepository.countOverdueTasksByBoardId(boardId, now))
                 .assignedToMeCount(taskRepository.countByBoardIdAndAssigneeId(boardId, currentUser.getId()))
-                .overdueToMeCount((long) taskRepository.findOverdueTasksByAssignee(currentUser.getId(), LocalDateTime.now()).stream()
-                        .filter(task -> task.getTaskList().getBoard().getId().equals(boardId))
-                        .count())
+                .overdueToMeCount(taskRepository.countOverdueTasksByBoardIdAndAssigneeId(boardId, currentUser.getId(), now))
                 .build();
     }
 

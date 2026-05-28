@@ -42,6 +42,20 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @Query("SELECT t FROM Task t WHERE t.assignee.id = :assigneeId AND t.dueDate < :now AND t.status <> com.aman.smart_task_manager.model.TaskStatus.DONE")
     List<Task> findOverdueTasksByAssignee(@Param("assigneeId") Long assigneeId, @Param("now") LocalDateTime now);
 
+    @Query("""
+            SELECT t FROM Task t
+            WHERE t.taskList.board.id = :boardId
+              AND (:status IS NULL OR t.status = :status)
+              AND (:assigneeId IS NULL OR t.assignee.id = :assigneeId)
+              AND (:startDate IS NULL OR t.dueDate >= :startDate)
+              AND (:endDate IS NULL OR t.dueDate <= :endDate)
+            """)
+    List<Task> findByBoardWithFilters(@Param("boardId") Long boardId,
+                                      @Param("status") TaskStatus status,
+                                      @Param("assigneeId") Long assigneeId,
+                                      @Param("startDate") LocalDateTime startDate,
+                                      @Param("endDate") LocalDateTime endDate);
+
     @Query("SELECT COUNT(t) FROM Task t WHERE t.taskList.board.id = :boardId AND t.status = :status")
     long countByBoardIdAndStatus(@Param("boardId") Long boardId, @Param("status") TaskStatus status);
 
@@ -50,4 +64,18 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT COUNT(t) FROM Task t WHERE t.taskList.board.id = :boardId AND t.assignee.id = :assigneeId")
     long countByBoardIdAndAssigneeId(@Param("boardId") Long boardId, @Param("assigneeId") Long assigneeId);
+
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.taskList.board.id = :boardId AND t.dueDate < :now AND t.status <> com.aman.smart_task_manager.model.TaskStatus.DONE")
+    long countOverdueTasksByBoardId(@Param("boardId") Long boardId, @Param("now") LocalDateTime now);
+
+    @Query("""
+            SELECT COUNT(t) FROM Task t
+            WHERE t.taskList.board.id = :boardId
+              AND t.assignee.id = :assigneeId
+              AND t.dueDate < :now
+              AND t.status <> com.aman.smart_task_manager.model.TaskStatus.DONE
+            """)
+    long countOverdueTasksByBoardIdAndAssigneeId(@Param("boardId") Long boardId,
+                                                 @Param("assigneeId") Long assigneeId,
+                                                 @Param("now") LocalDateTime now);
 }

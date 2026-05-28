@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -69,23 +70,9 @@ public class TaskController {
         boardRepository.findBoardByIdAndUserAccess(boardId, currentUser.getId(), currentUser)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board not found"));
 
-        List<Task> tasks = taskRepository.findByTaskListBoardId(boardId);
-        if (status != null) {
-            tasks = tasks.stream().filter(task -> task.getStatus() == status).toList();
-        }
-        if (assigneeId != null) {
-            tasks = tasks.stream()
-                    .filter(task -> task.getAssignee() != null && task.getAssignee().getId().equals(assigneeId))
-                    .toList();
-        }
-        if (dueDate != null) {
-            LocalDate dayStart = dueDate;
-            tasks = tasks.stream()
-                    .filter(task -> task.getDueDate() != null
-                            && !task.getDueDate().isBefore(dayStart.atStartOfDay())
-                            && !task.getDueDate().isAfter(dayStart.atTime(LocalTime.MAX)))
-                    .toList();
-        }
+        LocalDateTime startDate = dueDate == null ? null : dueDate.atStartOfDay();
+        LocalDateTime endDate = dueDate == null ? null : dueDate.atTime(LocalTime.MAX);
+        List<Task> tasks = taskRepository.findByBoardWithFilters(boardId, status, assigneeId, startDate, endDate);
         return tasks.stream().map(this::toDto).toList();
     }
 

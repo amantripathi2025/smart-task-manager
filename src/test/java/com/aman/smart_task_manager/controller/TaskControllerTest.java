@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -59,7 +60,7 @@ class TaskControllerTest {
 
         when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(currentUser));
         when(boardRepository.findBoardByIdAndUserAccess(10L, 1L, currentUser)).thenReturn(Optional.of(board));
-        when(taskRepository.findByTaskListBoardId(10L)).thenReturn(List.of(task1, task2));
+        when(taskRepository.findByBoardWithFilters(any(), any(), any(), any(), any())).thenReturn(List.of(task1));
 
         mockMvc.perform(get("/api/boards/10/tasks")
                         .param("status", "IN_PROGRESS")
