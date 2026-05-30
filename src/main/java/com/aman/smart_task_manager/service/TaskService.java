@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class TaskService {
+    private static final String DEFAULT_LABEL_COLOR = "#6366f1";
 
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
@@ -153,6 +154,6 @@ public class TaskService {
     private Label resolveLabel(String name) {
         return labelRepository.findByNameIgnoreCase(name)
                 .orElseGet(() -> labelRepository.save(Label.builder().name(name.toLowerCase())
-                        .color("#6366f1").build()));
+                        .color(DEFAULT_LABEL_COLOR).build()));
     }
 }

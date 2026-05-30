@@ -83,4 +83,4 @@ CREATE TABLE IF NOT EXISTS activities (
     actor_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX IF NOT EXISTS idx_activity_board_created ON activities(board_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_activity_board_created ON activities(board_id, created_at);

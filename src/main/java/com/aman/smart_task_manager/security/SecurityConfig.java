@@ -29,8 +29,13 @@ import java.util.List;
 public class SecurityConfig {
 
     private final UserRepository userRepository;
-    private final JwtAuthFilter jwtAuthFilter;
+    private final JwtUtil jwtUtil;
     private final AppProperties appProperties;
+
+    @Bean
+    public JwtAuthFilter jwtAuthFilter(UserDetailsService userDetailsService) {
+        return new JwtAuthFilter(jwtUtil, userDetailsService);
+    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -49,7 +54,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(c -> c.disable())

@@ -31,7 +31,7 @@ A secure, production-ready Spring Boot task management backend with JWT auth, bo
 Uses `application-dev.properties` with env overrides:
 - `DB_URL` (default `jdbc:postgresql://localhost:5432/taskmanager`)
 - `DB_USERNAME` (default `admin`)
-- `DB_PASSWORD` (default `admin123`)
+- `DB_PASSWORD` (default `dev-local-only-UseStrongPassword!2026`)
 - `JWT_SECRET` (optional override)
 - `APP_CORS_ALLOWED_ORIGINS` (comma-separated)
 
@@ -93,7 +93,7 @@ docker run --rm -p 8080:8080 \
   -e SPRING_PROFILES_ACTIVE=prod \
   -e DB_URL=jdbc:postgresql://host:5432/taskmanager \
   -e DB_USERNAME=admin \
-  -e DB_PASSWORD=change-me \
+  -e DB_PASSWORD=your-secure-database-password \
   -e JWT_SECRET=replace-with-strong-secret \
   -e APP_CORS_ALLOWED_ORIGINS=https://your-frontend.example.com \
   smart-task-manager:latest

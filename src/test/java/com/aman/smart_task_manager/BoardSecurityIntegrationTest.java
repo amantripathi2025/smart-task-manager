@@ -48,12 +48,12 @@ class BoardSecurityIntegrationTest {
     private String registerAndLogin(String email) throws Exception {
         mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{"name":"User","email":"" + email + "","password":"Password@123"}"))
+                .content("{\"name\":\"User\",\"email\":\"" + email + "\",\"password\":\"Password@123\"}"))
                 .andExpect(status().isOk());
 
         MvcResult login = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{"email":"" + email + "","password":"Password@123"}"))
+                        .content("{\"email\":\"" + email + "\",\"password\":\"Password@123\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
 

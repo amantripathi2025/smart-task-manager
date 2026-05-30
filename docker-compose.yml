@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-taskmanager}
       POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev-local-only-UseStrongPassword!2026}
     ports:
       - "5432:5432"
     volumes:
