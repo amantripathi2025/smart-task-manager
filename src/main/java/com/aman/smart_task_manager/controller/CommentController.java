@@ -1,52 +1,38 @@
 package com.aman.smart_task_manager.controller;
 
-import com.aman.smart_task_manager.model.Comment;
-import com.aman.smart_task_manager.repository.CommentRepository;
-import com.aman.smart_task_manager.repository.TaskRepository;
-import com.aman.smart_task_manager.repository.UserRepository;
-import lombok.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.aman.smart_task_manager.dto.request.CommentCreateRequest;
+import com.aman.smart_task_manager.dto.response.CommentDto;
+import com.aman.smart_task_manager.dto.response.MessageResponse;
+import com.aman.smart_task_manager.service.CommentService;
+import com.aman.smart_task_manager.service.CurrentUserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tasks/{taskId}/comments")
+@RequestMapping("/api/v1/tasks/{taskId}/comments")
 @RequiredArgsConstructor
+@Tag(name = "Comments")
 public class CommentController {
 
-    private final CommentRepository commentRepository;
-    private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
-
-    @Data static class CommentRequest { String content; }
+    private final CommentService commentService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
-    public ResponseEntity<List<Comment>> getComments(@PathVariable Long taskId) {
-        return taskRepository.findById(taskId).map(task ->
-                ResponseEntity.ok(commentRepository.findByTaskOrderByCreatedAtAsc(task))
-        ).orElse(ResponseEntity.notFound().build());
+    public List<CommentDto> getComments(@PathVariable Long taskId) {
+        return commentService.list(taskId, currentUserService.getCurrentUser());
     }
 
     @PostMapping
-    public ResponseEntity<?> addComment(@PathVariable Long taskId,
-                                        @RequestBody CommentRequest req,
-                                        @AuthenticationPrincipal UserDetails userDetails) {
-        return taskRepository.findById(taskId).map(task -> {
-            var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-            Comment comment = Comment.builder()
-                    .content(req.content)
-                    .task(task)
-                    .author(user)
-                    .build();
-            return ResponseEntity.ok(commentRepository.save(comment));
-        }).orElse(ResponseEntity.notFound().build());
+    public CommentDto addComment(@PathVariable Long taskId, @Valid @RequestBody CommentCreateRequest request) {
+        return commentService.create(taskId, request, currentUserService.getCurrentUser());
     }
 
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<?> deleteComment(@PathVariable Long commentId) {
-        commentRepository.deleteById(commentId);
-        return ResponseEntity.ok("Comment deleted");
+    public MessageResponse deleteComment(@PathVariable Long taskId, @PathVariable Long commentId) {
+        return commentService.delete(taskId, commentId, currentUserService.getCurrentUser());
     }
 }

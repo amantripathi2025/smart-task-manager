@@ -4,16 +4,24 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "task_lists")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Table(name = "task_lists", indexes = {
+        @Index(name = "idx_task_list_board", columnList = "board_id"),
+        @Index(name = "idx_task_list_board_position", columnList = "board_id,position")
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class TaskList {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 120)
     private String name;
 
+    @Column(nullable = false)
     private Integer position;
 
     @ManyToOne(fetch = FetchType.LAZY)

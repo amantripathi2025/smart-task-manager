@@ -1,85 +1,67 @@
 package com.aman.smart_task_manager.controller;
 
-import com.aman.smart_task_manager.model.*;
-import com.aman.smart_task_manager.repository.*;
-import lombok.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.aman.smart_task_manager.dto.request.TaskCreateRequest;
+import com.aman.smart_task_manager.dto.request.TaskUpdateRequest;
+import com.aman.smart_task_manager.dto.response.MessageResponse;
+import com.aman.smart_task_manager.dto.response.PagedResponse;
+import com.aman.smart_task_manager.dto.response.TaskDto;
+import com.aman.smart_task_manager.service.CurrentUserService;
+import com.aman.smart_task_manager.service.TaskService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDateTime;
+
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tasks")
+@RequestMapping("/api/v1/tasks")
 @RequiredArgsConstructor
+@Tag(name = "Tasks")
 public class TaskController {
 
-    private final TaskRepository taskRepository;
-    private final TaskListRepository taskListRepository;
-    private final UserRepository userRepository;
+    private final TaskService taskService;
+    private final CurrentUserService currentUserService;
 
-    @Data
-    static class TaskRequest {
-        String title, description, status, priority;
-        Long taskListId, assigneeId;
-        LocalDateTime dueDate;
-    }
-
-    @GetMapping("/board/{boardId}")
-    public List<Task> getTasksByBoard(@PathVariable Long boardId,
-                                      @RequestParam(required = false) String status) {
-        if (status != null) {
-            return taskRepository.findByBoardIdAndStatus(boardId, TaskStatus.valueOf(status));
-        }
-        return taskRepository.findByBoardId(boardId);
+    @GetMapping
+    public PagedResponse<TaskDto> search(@RequestParam Long boardId,
+                                         @RequestParam(required = false) String status,
+                                         @RequestParam(required = false) String priority,
+                                         @RequestParam(required = false) Long assigneeId,
+                                         @RequestParam(required = false, name = "q") String query,
+                                         @RequestParam(defaultValue = "0") @Min(0) int page,
+                                         @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+                                         @RequestParam(defaultValue = "createdAt") String sortBy,
+                                         @RequestParam(defaultValue = "desc") String sortDir) {
+        return taskService.search(boardId, status, priority, assigneeId, query, page, size, sortBy, sortDir,
+                currentUserService.getCurrentUser());
     }
 
     @PostMapping
-    public ResponseEntity<?> createTask(@RequestBody TaskRequest req) {
-        return taskListRepository.findById(req.taskListId).map(list -> {
-            Task task = Task.builder()
-                    .title(req.title)
-                    .description(req.description)
-                    .taskList(list)
-                    .dueDate(req.dueDate)
-                    .build();
-            if (req.status != null) task.setStatus(TaskStatus.valueOf(req.status));
-            if (req.priority != null) task.setPriority(Priority.valueOf(req.priority));
-            if (req.assigneeId != null) {
-                userRepository.findById(req.assigneeId).ifPresent(task::setAssignee);
-            }
-            return ResponseEntity.ok(taskRepository.save(task));
-        }).orElse(ResponseEntity.notFound().build());
+    public TaskDto createTask(@Valid @RequestBody TaskCreateRequest request) {
+        return taskService.create(request, currentUserService.getCurrentUser());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable Long id,
-                                        @RequestBody TaskRequest req) {
-        return taskRepository.findById(id).map(task -> {
-            if (req.title != null) task.setTitle(req.title);
-            if (req.description != null) task.setDescription(req.description);
-            if (req.status != null) task.setStatus(TaskStatus.valueOf(req.status));
-            if (req.priority != null) task.setPriority(Priority.valueOf(req.priority));
-            if (req.dueDate != null) task.setDueDate(req.dueDate);
-            if (req.assigneeId != null) {
-                userRepository.findById(req.assigneeId).ifPresent(task::setAssignee);
-            }
-            if (req.taskListId != null) {
-                taskListRepository.findById(req.taskListId).ifPresent(task::setTaskList);
-            }
-            return ResponseEntity.ok(taskRepository.save(task));
-        }).orElse(ResponseEntity.notFound().build());
+    public TaskDto updateTask(@PathVariable Long id, @Valid @RequestBody TaskUpdateRequest request) {
+        return taskService.update(id, request, currentUserService.getCurrentUser());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTask(@PathVariable Long id) {
-        taskRepository.deleteById(id);
-        return ResponseEntity.ok("Task deleted");
+    public MessageResponse deleteTask(@PathVariable Long id) {
+        return taskService.delete(id, currentUserService.getCurrentUser());
     }
 
     @GetMapping("/overdue")
-    public List<Task> getOverdueTasks() {
-        return taskRepository.findOverdueTasks(LocalDateTime.now());
+    public List<TaskDto> getOverdueTasks(@RequestParam Long boardId) {
+        return taskService.overdue(boardId, currentUserService.getCurrentUser());
+    }
+
+    @GetMapping("/reminders")
+    public List<TaskDto> getReminders(@RequestParam Long boardId,
+                                      @RequestParam(required = false) Integer hours) {
+        return taskService.reminders(boardId, hours, currentUserService.getCurrentUser());
     }
 }
